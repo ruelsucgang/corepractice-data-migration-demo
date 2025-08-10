@@ -237,6 +237,7 @@ public class MigrationService : IMigrationService
         var linesCreated = toInsertLines.Count;
 
         return new MigrationResult(patientsInserted, treatmentsInserted, invoicesCreated, linesCreated);
+    }
 
     #region helpers
     private static string? NullIfEmpty(string? s)
