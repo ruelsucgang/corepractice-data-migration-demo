@@ -1,6 +1,14 @@
-﻿namespace Demo.Application.Abstractions;
+﻿using Demo.Application.DTOs;
+
+namespace Demo.Application.Abstractions;
 
 public interface ICsvReaderService
 {
-    Task<List<T>> ReadAsync<T>(string filePath, CancellationToken ct = default);
+
+    Task<List<PatientCsvRow>> ReadPatientsAsync(string filePath, CancellationToken ct = default);
+    Task<List<TreatmentCsvRow>> ReadTreatmentsAsync(string filePath, CancellationToken ct = default);
+
 }
+
+
+

@@ -25,7 +25,7 @@ public static class DependencyInjection
 
         // Services
         services.AddScoped<IMigrationService, MigrationService>();
-        services.AddScoped<ICsvReaderService, CsvReaderService>(); 
+        services.AddScoped<ICsvReaderService, CsvReaderService>();
 
         return services;
     }
