@@ -94,11 +94,21 @@ public class MigrationService : IMigrationService
         var toInsertPatients = new List<Patient>();
         foreach (var r in patientRows)
         {
-            if (existingMap.ContainsKey(r.PatientIdentifier)) continue;
+            var key = (r.PatientIdentifier ?? "").Trim();
+            if (string.IsNullOrEmpty(key)) continue;
+
+            if (existingMap.TryGetValue(key, out var existingPatient))
+            {
+                // optional upsert/update (kept minimal)
+                existingPatient.Firstname = r.Firstname.Trim();
+                existingPatient.Lastname = r.Lastname.Trim();
+                existingPatient.Email = NormalizeEmail(r.Email);
+                continue;
+            }
 
             var p = new Patient
             {
-                PatientIdentifier = r.PatientIdentifier,
+                PatientIdentifier = key,
                 PatientNo = NullIfEmpty(r.PatientNo),
                 Firstname = r.Firstname.Trim(),
                 Lastname = r.Lastname.Trim(),
@@ -121,25 +131,25 @@ public class MigrationService : IMigrationService
                 IsDeleted = ParseBool(r.IsDeleted)
             };
             toInsertPatients.Add(p);
-            existingMap[p.PatientIdentifier] = p;
+            existingMap[key] = p;
         }
 
         if (toInsertPatients.Count > 0)
             await _patientRepo.AddRangeAsync(toInsertPatients, ct);
 
-        // 2) Map treatments
+        // IMPORTANT: save now so new Patients get real IDs
+        await _patientRepo.SaveChangesAsync(ct);
+
+        // 2) Map & insert treatments (now we can safely set PatientId)
         var toInsertTreatments = new List<Treatment>();
         foreach (var r in treatmentRows)
         {
-            if (!existingMap.TryGetValue(r.PatientIdentifier, out var p))
+            var key = (r.PatientIdentifier ?? "").Trim();
+            if (!existingMap.TryGetValue(key, out var p))
             {
-                _logger.LogWarning("Skipping treatment {TreatmentIdentifier}, unknown patient {PatientIdentifier}",
-                    r.TreatmentIdentifier, r.PatientIdentifier);
+                _logger.LogWarning("Skipping treatment {Tx} - unknown patient {Pid}", r.TreatmentIdentifier, r.PatientIdentifier);
                 continue;
             }
-
-            var qty = SafeInt(r.Quantity, 1);
-            var fee = SafeDecimal(r.Fee, 0m);
 
             var t = new Treatment
             {
@@ -149,21 +159,21 @@ public class MigrationService : IMigrationService
                 ItemCode = r.ItemCode.Trim(),
                 Tooth = NullIfEmpty(r.Tooth),
                 Surface = NullIfEmpty(r.Surface),
-                Quantity = qty,
-                Fee = fee,
-                PatientId = p.PatientId, // if not assigned yet, EF will fix after SaveChanges (if p is new tracked)
+                Quantity = SafeInt(r.Quantity, 1),
+                Fee = SafeDecimal(r.Fee, 0m),
+                PatientId = p.PatientId,          // p has real ID now
                 IsPaid = ParseBool(r.IsPaid),
                 IsVoided = ParseBool(r.IsVoided)
             };
             toInsertTreatments.Add(t);
         }
-
         if (toInsertTreatments.Count > 0)
             await _treatmentRepo.AddRangeAsync(toInsertTreatments, ct);
 
-        // 3) Create invoices per (Patient, CompleteDate.Date)
-        //    Each treatment becomes one line item in that invoice.
-        //    Simple invoiceNo sequence: 1..N for the run. Identifier can be Guid.
+        // Save so treatments get IDs (needed for line items)
+        await _treatmentRepo.SaveChangesAsync(ct);
+
+        // 3) Create invoices per (PatientId, CompleteDate.Date)
         var groups = toInsertTreatments
             .Where(t => t.CompleteDate.HasValue)
             .GroupBy(t => new { t.PatientId, Day = t.CompleteDate!.Value.Date });
@@ -179,7 +189,7 @@ public class MigrationService : IMigrationService
                 InvoiceIdentifier = Guid.NewGuid().ToString("N"),
                 InvoiceNo = nextInvoiceNo++,
                 InvoiceDate = g.Key.Day,
-                DueDate = g.Key.Day, // or +14 days kung gusto mo maglagay ng due logic
+                DueDate = g.Key.Day,
                 Note = null,
                 Total = 0m,
                 Paid = 0m,
@@ -188,8 +198,7 @@ public class MigrationService : IMigrationService
                 IsDeleted = false
             };
 
-            decimal runningTotal = 0m;
-
+            decimal sum = 0m;
             foreach (var t in g)
             {
                 var line = new InvoiceLineItem
@@ -201,34 +210,33 @@ public class MigrationService : IMigrationService
                     UnitAmount = t.Fee,
                     LineAmount = t.Fee * t.Quantity,
                     PatientId = t.PatientId,
-                    TreatmentId = t.TreatmentId,
-                    Invoice = invoice
+                    TreatmentId = t.TreatmentId,   // now non-zero because we saved above
+                    Invoice = invoice              // set nav so EF links properly
                 };
-                runningTotal += line.LineAmount;
+                sum += line.LineAmount;
                 toInsertLines.Add(line);
 
-                // link treatment to invoice, EF will set InvoiceId after save
-                t.Invoice = invoice;
+                t.Invoice = invoice; // link treatment to invoice (nav property)
             }
 
-            invoice.Total = runningTotal;
+            invoice.Total = sum;
             toInsertInvoices.Add(invoice);
         }
 
         if (toInsertInvoices.Count > 0)
             await _invoiceRepo.AddRangeAsync(toInsertInvoices, ct);
-
         if (toInsertLines.Count > 0)
             await _lineRepo.AddRangeAsync(toInsertLines, ct);
+
+        // final save
+        await _patientRepo.SaveChangesAsync(ct);
 
         var patientsInserted = toInsertPatients.Count;
         var treatmentsInserted = toInsertTreatments.Count;
         var invoicesCreated = toInsertInvoices.Count;
         var linesCreated = toInsertLines.Count;
 
-        await _patientRepo.SaveChangesAsync(ct); // one SaveChanges is enough because same DbContext instance is used underneath
         return new MigrationResult(patientsInserted, treatmentsInserted, invoicesCreated, linesCreated);
-    }
 
     #region helpers
     private static string? NullIfEmpty(string? s)
@@ -262,4 +270,5 @@ public class MigrationService : IMigrationService
         return trimmed.Equals("n/a", StringComparison.OrdinalIgnoreCase) ? null : trimmed.ToLowerInvariant();
     }
     #endregion
+
 }
