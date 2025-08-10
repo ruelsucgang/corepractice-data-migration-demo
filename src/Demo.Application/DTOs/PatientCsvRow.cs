@@ -2,6 +2,7 @@
 
 public class PatientCsvRow
 {
+    public int PatientId { get; set; }
     public string PatientIdentifier { get; set; } = string.Empty;
     public string? PatientNo { get; set; }
     public string Firstname { get; set; } = string.Empty; 

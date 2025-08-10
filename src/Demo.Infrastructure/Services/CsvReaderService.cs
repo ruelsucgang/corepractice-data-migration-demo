@@ -90,8 +90,6 @@ public class CsvReaderService : ICsvReaderService
         }
     }
 
-    // Hindi natin alam exact headers ng treatments.csv mo,
-    // kaya maglalagay tayo ng common aliases para flexible.
     private sealed class TreatmentMap : ClassMap<TreatmentCsvRow>
     {
         public TreatmentMap()
@@ -104,7 +102,20 @@ public class CsvReaderService : ICsvReaderService
             Map(m => m.Surface).Name("Surface").Optional();
             Map(m => m.Quantity).Name("Quantity", "Qty").Optional();
             Map(m => m.Fee).Name("Fee", "Amount", "Price", "UnitAmount");
-            Map(m => m.PatientIdentifier).Name("PatientIdentifier", "PatientId", "PatientKey", "PatientRef");
+            Map(m => m.PatientIdentifier).Convert(ctx =>
+            {
+                // primary: PatientIdentifier
+                if (ctx.Row.TryGetField("PatientIdentifier", out string v) && !string.IsNullOrWhiteSpace(v))
+                    return v.Trim();
+
+                // common legacy headers:
+                string[] candidates = { "PatientId", "PatientID", "Patient_Id", "PatId", "PID", "Patient", "Patient Ref" };
+                foreach (var name in candidates)
+                    if (ctx.Row.TryGetField(name, out string x) && !string.IsNullOrWhiteSpace(x))
+                        return x.Trim();
+
+                return null; // wala talaga
+            });
             Map(m => m.IsPaid).Name("IsPaid", "Paid").Optional();
             Map(m => m.IsVoided).Name("IsVoided", "Voided", "IsCancelled").Optional();
         }
