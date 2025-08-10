@@ -2,31 +2,22 @@
 using FluentValidation;
 
 namespace Demo.Application.Validation;
-public class TreatmentValidator : AbstractValidator<TreatmentCsvRow>
-{
-    public TreatmentValidator()
-    {
-        RuleFor(x => x.TreatmentIdentifier)
-            .NotEmpty().WithMessage("TreatmentIdentifier is required.")
-            .MaximumLength(50);   
 
-        RuleFor(x => x.Description).NotEmpty().MaximumLength(512);
-        RuleFor(x => x.ItemCode).NotEmpty().MaximumLength(10);
+public class TreatmentCsvValidator : AbstractValidator<TreatmentCsvRow>
+{
+    public TreatmentCsvValidator()
+    {
+        RuleFor(x => x.TreatmentIdentifier).NotEmpty();
+        RuleFor(x => x.PatientIdentifier).NotEmpty();
+        RuleFor(x => x.Description).NotEmpty();
+        RuleFor(x => x.ItemCode).NotEmpty();
 
         RuleFor(x => x.Quantity)
-            .Must(x => int.TryParse(x, out var q) && q > 0)
-            .WithMessage("Quantity must be a positive integer.");
+            .Must(q => int.TryParse(q, out var n) && n > 0)
+            .WithMessage("Quantity must be a positive integer");
 
         RuleFor(x => x.Fee)
-            .Must(x => decimal.TryParse(x, out var f) && f >= 0)
-            .WithMessage("Fee must be a non-negative decimal.");
-
-        RuleFor(x => x.CompleteDate)
-            .Must(PatientValidator.BeValidDate)
-            .When(x => !string.IsNullOrWhiteSpace(x.CompleteDate))
-            .WithMessage("CompleteDate must be a valid date.");
-
-        RuleFor(x => x.PatientIdentifier)  
-            .NotEmpty().WithMessage("PatientIdentifier is required to link treatment to a patient.");  
+            .Must(f => decimal.TryParse(f, out var d) && d >= 0)
+            .WithMessage("Fee must be a non-negative number");
     }
 }
