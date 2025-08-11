@@ -1,5 +1,3 @@
-using System;
-using System.Windows.Forms;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -27,7 +25,6 @@ internal static class Program
             .ConfigureServices((ctx, services) =>
             {
                 services.AddInfrastructure(ctx.Configuration);
-                //services.AddLogging();
                 services.AddScoped<MigrationForm>(); // WinForms resolved via DI
             });
 }

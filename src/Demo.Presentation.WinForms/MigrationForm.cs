@@ -1,11 +1,6 @@
-using System;
 using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Windows.Forms;
 using Demo.Application.Abstractions;
 using Demo.Application.DTOs;
-using Demo.Infrastructure.Services;
 
 namespace Demo.Presentation.WinForms
 {
@@ -166,6 +161,7 @@ namespace Demo.Presentation.WinForms
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information
                 );
+                ResetAll();
             }
             catch (Exception ex)
             {
@@ -203,9 +199,6 @@ namespace Demo.Presentation.WinForms
 
                 Log($"Exported invalid rows to {sfd.FileName}");
                 SetStatus("Invalid rows exported");
-                DisableBtns(1);
-                UpdatePictureBox();
-                ResetAll();
             }
             catch (Exception ex)
             {
@@ -386,18 +379,17 @@ namespace Demo.Presentation.WinForms
                     break;
 
                 case 4:
-                    // Step 4 - Ingest Data
+                    // Step 4 - Ingest Data & Export Invalid
                     this.stepsTxt.Text =
-                        "  \r\n 1. Click the \"Ingest\" button to save all valid records into the database.\r\n" +
-                        "  \r\n 2. A summary will be shown for rows ingested, skipped, or with errors.";
+                        " \r\n  \r\n To export invalid data:"  +
+                        " \r\n 1. Click “Export Invalid” to save all invalid rows in the current grid to a CSV file.\r\n" +
+                        " \r\n 2. The CSV includes the error details per row. Fix them, then reload the corrected file." +
+                        " \r\n  \r\n" +
+                        " \r\n  \r\n To ingest data:" +
+                        " \r\n 1. Click the \"Ingest\" button to save all valid records into the database.\r\n" +
+                        " \r\n 2. A summary will be shown for rows ingested, skipped, or with errors.";
                     break;
-
-                case 5:
-                    // Step 5 - Export Invalid
-                    this.stepsTxt.Text =
-                        "  \r\n 1. Click “Export Invalid” to save all invalid rows in the current grid to a CSV file." +
-                        "  \r\n 2. The CSV includes the error details per row. Fix them, then reload the corrected file.";
-                    break;
+                     
                 default:
                     this.stepsTxt.Text = "Please follow the steps in order starting from Step 1.";
                     break;
@@ -432,14 +424,9 @@ namespace Demo.Presentation.WinForms
                     this.btnValidate.Visible = false;
                     this.btnExportInvalid.Visible = false;
                     this.btnIngest.Visible = true;
-                    break;
-                case 5:
-                    this.btnLoadPatientsCsv.Visible = false;
-                    this.btnLoadTreatmentsCsv.Visible = false;
-                    this.btnValidate.Visible = false;
-                    this.btnIngest.Visible = false;
                     this.btnExportInvalid.Visible = true;
                     break;
+
                 default:
                     this.btnLoadTreatmentsCsv.Visible = false;
                     this.btnValidate.Visible = false;

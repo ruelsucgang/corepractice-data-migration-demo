@@ -139,7 +139,7 @@
             btnIngest.Name = "btnIngest";
             btnIngest.Size = new Size(308, 66);
             btnIngest.TabIndex = 3;
-            btnIngest.Text = "Step - 4: Ingest";
+            btnIngest.Text = "Step - 5: Ingest";
             btnIngest.UseVisualStyleBackColor = true;
             btnIngest.Visible = false;
             btnIngest.Click += btnIngest_Click;
@@ -155,7 +155,7 @@
             btnExportInvalid.Name = "btnExportInvalid";
             btnExportInvalid.Size = new Size(308, 66);
             btnExportInvalid.TabIndex = 4;
-            btnExportInvalid.Text = "Export Invalid";
+            btnExportInvalid.Text = "Step-4: Export Invalid";
             btnExportInvalid.UseVisualStyleBackColor = true;
             btnExportInvalid.Visible = false;
             btnExportInvalid.Click += btnExportInvalid_Click;
@@ -238,7 +238,7 @@
             // 
             statusStrip.ImageScalingSize = new Size(20, 20);
             statusStrip.Items.AddRange(new ToolStripItem[] { lblStatus });
-            statusStrip.Location = new Point(0, 966);
+            statusStrip.Location = new Point(0, 993);
             statusStrip.Name = "statusStrip";
             statusStrip.Padding = new Padding(1, 0, 16, 0);
             statusStrip.Size = new Size(1374, 26);
@@ -259,12 +259,11 @@
             panel1.Dock = DockStyle.Left;
             panel1.Location = new Point(0, 0);
             panel1.Name = "panel1";
-            panel1.Size = new Size(310, 966);
+            panel1.Size = new Size(310, 993);
             panel1.TabIndex = 11;
             // 
             // panel3
             // 
-            panel3.Controls.Add(_waitOverlay);
             panel3.Controls.Add(panel13);
             panel3.Controls.Add(btnLoadPatientsCsv);
             panel3.Controls.Add(btnExportInvalid);
@@ -274,7 +273,7 @@
             panel3.Dock = DockStyle.Fill;
             panel3.Location = new Point(0, 183);
             panel3.Name = "panel3";
-            panel3.Size = new Size(308, 781);
+            panel3.Size = new Size(308, 808);
             panel3.TabIndex = 1;
             // 
             // _waitOverlay
@@ -282,9 +281,9 @@
             _waitOverlay.Controls.Add(_waitLabel);
             _waitOverlay.Controls.Add(_waitProgress);
             _waitOverlay.Dock = DockStyle.Top;
-            _waitOverlay.Location = new Point(0, 635);
+            _waitOverlay.Location = new Point(0, 372);
             _waitOverlay.Name = "_waitOverlay";
-            _waitOverlay.Size = new Size(308, 103);
+            _waitOverlay.Size = new Size(308, 116);
             _waitOverlay.TabIndex = 8;
             _waitOverlay.Visible = false;
             // 
@@ -309,11 +308,12 @@
             // 
             // panel13
             // 
+            panel13.Controls.Add(_waitOverlay);
             panel13.Controls.Add(stepsTxt);
             panel13.Dock = DockStyle.Top;
             panel13.Location = new Point(0, 330);
             panel13.Name = "panel13";
-            panel13.Size = new Size(308, 305);
+            panel13.Size = new Size(308, 445);
             panel13.TabIndex = 7;
             // 
             // stepsTxt
@@ -321,7 +321,7 @@
             stepsTxt.BackColor = Color.FromArgb(0, 0, 64);
             stepsTxt.BorderStyle = BorderStyle.None;
             stepsTxt.Cursor = Cursors.SizeAll;
-            stepsTxt.Dock = DockStyle.Fill;
+            stepsTxt.Dock = DockStyle.Top;
             stepsTxt.Enabled = false;
             stepsTxt.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
             stepsTxt.ForeColor = Color.White;
@@ -329,7 +329,7 @@
             stepsTxt.Multiline = true;
             stepsTxt.Name = "stepsTxt";
             stepsTxt.ReadOnly = true;
-            stepsTxt.Size = new Size(308, 305);
+            stepsTxt.Size = new Size(308, 372);
             stepsTxt.TabIndex = 6;
             stepsTxt.Text = "\\r\\nInstructions";
             // 
@@ -400,7 +400,7 @@
             panel8.Dock = DockStyle.Fill;
             panel8.Location = new Point(310, 334);
             panel8.Name = "panel8";
-            panel8.Size = new Size(1064, 632);
+            panel8.Size = new Size(1064, 659);
             panel8.TabIndex = 14;
             // 
             // panel10
@@ -478,7 +478,7 @@
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1374, 992);
+            ClientSize = new Size(1374, 1019);
             Controls.Add(panel8);
             Controls.Add(panel4);
             Controls.Add(panel1);

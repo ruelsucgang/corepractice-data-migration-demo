@@ -55,7 +55,7 @@ public class CsvReaderService : ICsvReaderService
         return new CsvReader(reader, cfg);
     }
 
-    // ---------- Class Maps with header aliases ----------
+    // Class Maps with header aliases 
 
     private sealed class PatientMap : ClassMap<PatientCsvRow>
     {
